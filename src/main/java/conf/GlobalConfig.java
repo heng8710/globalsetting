@@ -1,6 +1,6 @@
 package conf;
-import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -15,16 +15,25 @@ import com.google.common.io.Files;
 
 /**
  * 全局配置文件的路径 ：classpath:global.js
+ * 注意：相对的路径层次必须是这样：
+ *   ..../classes/global.js
+ *   ..../lib/xxx.jar
  */
 public class GlobalConfig {
 
 	private static final String ConfigFileName = "global.js";
-	public static final String GlobalJsPath;
+	public static final Path GlobalJsPath;
 	static {
 		try {
+			final boolean isWindows = isWindows();
+			//【jar:file:/F:/ftp/dailijob/lib/globalsetting-1.0.0.jar!/conf/】
+			//【jar:file:/data/application/dailijob/lib/globalsetting-1.0.0.jar!/conf/】
+			final String s = GlobalConfig.class.getResource("").toString();
+			final String jarFilePath = s.substring(isWindows? 10: 9, s.lastIndexOf("!"));
 			//指定配置文件路径
-			GlobalJsPath = Paths.get(GlobalConfig.class.getResource("/").toURI()).resolve(ConfigFileName).toFile().getAbsolutePath();
-		} catch (URISyntaxException e) {
+			GlobalJsPath = Paths.get(jarFilePath).getParent()/*lib*/.getParent().resolve("classes")/*classes*/.resolve(ConfigFileName);
+//			GlobalJsPath = Paths.get(GlobalConfig.class.getResource("/").toURI()).resolve(ConfigFileName).toFile().getAbsolutePath();
+		} catch (Exception e) {
 			throw new IllegalStateException("cannot find the path of global.js");
 		}
 	}
@@ -64,7 +73,7 @@ public class GlobalConfig {
 			//启动js引擎
 			final ScriptEngineManager sem = new ScriptEngineManager();
 			final ScriptEngine engine = sem.getEngineByName("javascript");
-		    final String objStr = Files.toString(new File(GlobalJsPath), Charsets.UTF_8);
+		    final String objStr = Files.toString(GlobalJsPath.toFile(), Charsets.UTF_8);
 		    //把配置对象字面量（js），转成json格式字符串出来
 		    final String str = (String)engine.eval("JSON.stringify("+objStr+");");
 		    //然后，再转成java中的LinkedHashMap
@@ -76,4 +85,12 @@ public class GlobalConfig {
 		}
 	}
 	
+	
+	static boolean isWindows(){
+		final String os = System.getProperty("os.name");  
+		if(os.toLowerCase().startsWith("win")){  
+		  return true;
+		}
+		return false;
+	}
 }
