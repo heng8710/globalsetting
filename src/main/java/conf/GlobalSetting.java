@@ -20,13 +20,9 @@ import com.google.common.io.Files;
  *   ..../classes/xxx/yyy.js
  *   ..../lib/xxx.jar
  */
-public class GlobalConfig {
+public class GlobalSetting {
 
 	static final String DefaultConfigFileName = "global.js";
-	
-//	static Path configPath(){
-//		return configPath(DefaultConfigFileName);
-//	}
 	
 	/**得到【fileName.js】的配置文件的路径。
 	 * 处理了本类处于两种情况下（jar中、classes目录下），的两种情况：在这两种情况下自动找到配置的js文件。
@@ -47,14 +43,14 @@ public class GlobalConfig {
 			//如果是在jar中就是下面的路径：
 			//【jar:file:/F:/ftp/dailijob/lib/globalsetting-1.0.0.jar!/conf/】
 			//【jar:file:/data/application/dailijob/lib/globalsetting-1.0.0.jar!/conf/】
-			final String s = GlobalConfig.class.getResource("").toString();
+			final String s = GlobalSetting.class.getResource("").toString();
 			if(s.toLowerCase().startsWith("jar")){
 				final String jarFilePath = s.substring(isWindows? 10: 9, s.lastIndexOf("!"));
 				//指定配置文件路径
 				r = Paths.get(jarFilePath).getParent()/*lib*/.getParent().resolve("classes")/*classes*/.resolve(_fileName);
 			}else{
 				//【E:\eclipsews\workspace001\globalsetting\target\classes】
-				final Path cp/*classpath:.*/ = Paths.get(GlobalConfig.class.getResource("/").toURI());
+				final Path cp/*classpath:.*/ = Paths.get(GlobalSetting.class.getResource("/").toURI());
 				r = cp.resolve(_fileName);//?多层子路径
 			}
 //			System.out.println("path="+r);
@@ -132,7 +128,7 @@ public class GlobalConfig {
 			}
 			return tmp;
 		} catch (Exception e) {
-			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", DefaultConfigFileName) , e);
+			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", configFilePath) , e);
 		}
 	}
 	
@@ -159,7 +155,7 @@ public class GlobalConfig {
 //		    logger.debug("global.js : "+ map);
 			return map;
 		} catch (Exception e) {
-			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", DefaultConfigFileName) , e);
+			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", configFilePath) , e);
 		}
 	}
 	
