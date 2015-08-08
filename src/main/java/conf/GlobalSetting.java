@@ -2,6 +2,7 @@ package conf;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptEngine;
@@ -9,9 +10,13 @@ import javax.script.ScriptEngineManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+
+import conf.attribute.ArrayAttribute;
+import conf.attribute.Attribute;
+import conf.attribute.AttributeChainParser;
+import conf.attribute.IAttribute;
 
 /**
  * 全局配置文件的路径 ：classpath:global.js
@@ -20,7 +25,7 @@ import com.google.common.io.Files;
  *   ..../classes/xxx/yyy.js
  *   ..../lib/xxx.jar
  */
-public class GlobalSetting {
+public final class GlobalSetting {
 
 	static final String DefaultConfigFileName = "global.js";
 	
@@ -69,6 +74,12 @@ public class GlobalSetting {
 		System.out.println(getByPath("another.js", "a"));
 		System.out.println(getByPath("another.js", "mail.host"));
 		
+		System.out.println(getByPath("another.js", "xx.mao[0]"));
+		System.out.println(getByPath("another.js", "xx.mao[1]"));
+		System.out.println(getByPath("another.js", "xx.mao[2]"));
+		
+		System.out.println(getByPath("another.js", "xx.mao[3].nangua[3][1]"));
+		
 		System.out.println(get("noexit.js"));
 		System.out.println(getByPath("noexit.js", "a"));
 		System.out.println(getByPath("noexit.js", "mail.host"));
@@ -115,18 +126,44 @@ public class GlobalSetting {
 	 * @return
 	 */
 	public static Object getByPath(final String configFilePath, final String path){
+		
+		
+//		try {
+//			//启动js引擎
+//			final ScriptEngineManager sem = new ScriptEngineManager();
+//			final ScriptEngine engine = sem.getEngineByName("javascript");
+//		    final String objStr = Files.toString(configPath(configFilePath).toFile(), Charsets.UTF_8);
+//		    
+//		    final StringBuilder sb = new StringBuilder("var globalSetting = ").append(objStr).append(";");
+//		    sb.append("globalSetting.").append(path).append(";");
+//		    //把配置对象字面量（js），转成json格式字符串出来
+//		    final String str = (String)engine.eval(sb.toString());
+//		    //然后，再转成java中的LinkedHashMap
+//		    final Map<String,Object> map = new ObjectMapper().readValue(str, Map.class);
+////		    logger.debug("global.js : "+ map);
+//			return map;
+//		} catch (Exception e) {
+//			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", configFilePath) , e);
+//		}
+		
+		
+		
+		
 		try {
 			final Map<String, Object > root  = get(configFilePath);
-			Object tmp = root;
-			for(final String key: Splitter.on('.').omitEmptyStrings().trimResults().split(Strings.nullToEmpty(path))){
-				if(tmp instanceof Map){
-					final Map map = (Map)tmp;
-					tmp = map.get(key);
-				}else{
-					throw new IllegalArgumentException(String.format("path=[%s], 太长了，或者是路径不对？", path));
-				}
-			}
-			return tmp;
+//			Object tmp = root;
+//			for(final String key: Splitter.on('.').omitEmptyStrings().trimResults().split(Strings.nullToEmpty(path))){
+//				if(tmp instanceof Map){
+//					final Map map = (Map)tmp;
+//					tmp = map.get(key);
+//				}else{
+//					throw new IllegalArgumentException(String.format("path=[%s], 太长了，或者是路径不对？", path));
+//				}
+//			}
+//			return tmp;
+			
+			
+			return parsePath(root, path);
 		} catch (Exception e) {
 			throw new IllegalStateException(String.format("读取配置文件=[%s]失败", configFilePath) , e);
 		}
@@ -159,6 +196,41 @@ public class GlobalSetting {
 		}
 	}
 	
+	
+	
+	/**
+	 * 目前只能解析下面几种情况的js属性：
+	 * 1. '.' [-a-zA-Z0-9_]+
+	 * 2. '[' [0-9]+ ']'
+	 * @param objFromJsObject
+	 * @param path
+	 * @return
+	 */
+	static Object parsePath(final Map<String, Object> objFromJsObject, String path){
+		if(objFromJsObject == null || Strings.isNullOrEmpty(path)){
+			throw new IllegalArgumentException();
+		}
+		//js对象字面量的第一个属性引用，一定不是数组，一定是普通的属性
+		path = "." + path.trim();
+		final List<IAttribute> attList = AttributeChainParser.parse(path);
+		Object currentObj = objFromJsObject;
+		for(final IAttribute attribute: attList){
+			if(attribute instanceof Attribute){
+				final Attribute att = (Attribute)attribute;
+				if(currentObj instanceof Map){
+					currentObj = ((Map)currentObj).get(att.name);
+				}
+			}else if(attribute instanceof ArrayAttribute){
+				final ArrayAttribute att = (ArrayAttribute)attribute;
+				if(currentObj instanceof List){
+					currentObj = ((List)currentObj).get(att.index);
+				}
+			}else{
+				throw new IllegalStateException();
+			}
+		}
+		return currentObj;
+	}
 	
 	
 	
