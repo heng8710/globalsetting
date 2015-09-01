@@ -37,7 +37,7 @@ public final class GlobalSetting {
 	 * 
 	 * @return
 	 */
-	static Path configPath(final String fileName/*without [.js] subfix*/){
+	static Path configPath(final String fileName){
 		final String _fileName = (!Strings.isNullOrEmpty(fileName))? fileName.trim(): fileName;
 		if(Strings.isNullOrEmpty(_fileName) || _fileName.startsWith("/") || _fileName.startsWith("\\")){
 			throw new IllegalArgumentException(String.format("fileName=[%s]不对", fileName));
@@ -112,8 +112,8 @@ public final class GlobalSetting {
 	}
 	
 	/**
-	 * 暂时不支持数组表达式： 因为暂时看起来好像没有什么必要
-	 * @param path --按点.分隔，比如：【mail.host】（这也意味阒所有key不能有点号在中间）
+	 * 按照 属性表达式，取出对应的属性值
+	 * @param path --使用js中的属性引用表达方法。包括【.xx】、【[2333]】。目前不支持【['name']】这种引用属性的方法。
 	 * @return
 	 */
 	public static Object getByPath(final String path){
@@ -121,8 +121,20 @@ public final class GlobalSetting {
 	}
 	
 	/**
+	 * 按照 属性表达式，取出对应的属性值
+	 * @param path --使用js中的属性引用表达方法。包括【.xx】、【[2333]】。目前不支持【['name']】这种引用属性的方法。
+	 * @return
+	 */
+	public static String getStringByPath(final String path){
+		final Object r = getByPath(DefaultConfigFileName, path);
+		return r != null? r.toString(): null;
+	}
+	
+	
+	/**
+	 * 按照 属性表达式，取出对应的属性值
 	 * @param configFilePath　：相对于[classes]的路径；基于文件系统的路径表示方法，最好是用[/]作为分隔符，【要带.js结尾（注意大小 写）】
-	 * @param path ：用[.]分隔，类型于对象的属性值引用表示方法。
+	 * @param path ：使用js中的属性引用表达方法。包括【.xx】、【[2333]】。目前不支持【['name']】这种引用属性的方法。
 	 * @return
 	 */
 	public static Object getByPath(final String configFilePath, final String path){
@@ -206,7 +218,7 @@ public final class GlobalSetting {
 	 * @param path
 	 * @return
 	 */
-	static Object parsePath(final Map<String, Object> objFromJsObject, String path){
+	public static Object parsePath(final Map<String, Object> objFromJsObject, String path){
 		if(objFromJsObject == null || Strings.isNullOrEmpty(path)){
 			throw new IllegalArgumentException();
 		}

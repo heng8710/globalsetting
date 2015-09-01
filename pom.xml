@@ -26,6 +26,12 @@
 		</dependency>
 
 
+		<!-- <dependency>
+			<groupId>org.heng</groupId>
+			<artifactId>mytools</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency> -->
+
 	</dependencies>
 	<build>
 		<!-- <finalName>web001</finalName> -->
