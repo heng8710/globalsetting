@@ -1,6 +1,6 @@
 {
 	/*where log files place, absolute path*/
-	sqlite_file_folder: "/data/sqlite/log/",
+/*	sqlite_file_folder: "/data/sqlite/log/",
 	sname: "aagjj",
 	num: 998,
 	
@@ -11,5 +11,5 @@
 		password: "#####"
 	},
 	
-	jjfly: another.xx,
+	jjfly: another.xx,*/
 }
